@@ -9,10 +9,14 @@
             color: #fff;
             font-family: Helvetica, Arial, sans-serif;
             display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            height: 100vh;
-            margin-top: 100px;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 80px;
+        }
+
+        h1 {
+            color: orange;
+            margin-bottom: 30px;
         }
 
         .container {
@@ -20,15 +24,34 @@
             position: relative;
         }
 
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
         input {
-            width: 100%;
+            flex: 1;
             padding: 14px;
             font-size: 18px;
-            border-radius: 8px;
             border: none;
             outline: none;
-            background: #fff;
             color: #000;
+        }
+
+        button {
+            padding: 14px 18px;
+            border: none;
+            background: orange;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #ff9900;
         }
 
         .dropdown {
@@ -61,14 +84,20 @@
 
 <body>
 
+<h1>Predictive Text</h1>
+
 <div class="container">
-    <input 
-        type="text" 
-        id="inputBox" 
-        placeholder="Start typing..." 
-        oninput="debouncedSend()"
-        onkeydown="handleKeys(event)"
-    >
+
+    <div class="input-wrapper">
+        <input 
+            type="text" 
+            id="inputBox" 
+            placeholder="Start typing..." 
+            oninput="debouncedSend()"
+            onkeydown="handleKeys(event)"
+        >
+        <button onclick="send()">Enter</button>
+    </div>
 
     <div id="dropdown" class="dropdown"></div>
 </div>
@@ -145,6 +174,7 @@ function handleKeys(e) {
     else if (e.key === "Enter") {
         e.preventDefault();
         if (currentIndex >= 0) select(currentIndex);
+        else send();  // fallback if nothing selected
     }
 }
 
