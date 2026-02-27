@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Bayesian Predictor</title>
+
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            height: 100vh;
+            margin-top: 100px;
+        }
+
+        .container {
+            width: 500px;
+            position: relative;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px;
+            font-size: 18px;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            background: #fff;
+            color: #000;
+        }
+
+        .dropdown {
+            position: absolute;
+            width: 100%;
+            background: #111;
+            border-radius: 8px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .item {
+            padding: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .item:hover,
+        .active {
+            background: #222;
+        }
+
+        .prob {
+            float: right;
+            color: #888;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <input 
+        type="text" 
+        id="inputBox" 
+        placeholder="Start typing..." 
+        oninput="debouncedSend()"
+        onkeydown="handleKeys(event)"
+    >
+
+    <div id="dropdown" class="dropdown"></div>
+</div>
+
+<script>
+const API = "https://kaylin-shrimplike-erica.ngrok-free.dev"; 
+let timeout = null;
+let currentIndex = -1;
+let suggestions = [];
+
+function debouncedSend() {
+    clearTimeout(timeout);
+    timeout = setTimeout(send, 250);
+}
+
+async function send() {
+    const text = document.getElementById("inputBox").value;
+
+    const res = await fetch(API + "/chat", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ text: text })
+    });
+
+    const data = await res.json();
+    suggestions = data.predictions;
+
+    renderDropdown();
+}
+
+function renderDropdown() {
+    const dropdown = document.getElementById("dropdown");
+    dropdown.innerHTML = "";
+    currentIndex = -1;
+
+    suggestions.forEach((p, index) => {
+        const div = document.createElement("div");
+        div.classList.add("item");
+
+        div.innerHTML = `
+            ${p.word}
+            <span class="prob">${p.prob.toFixed(5)}</span>
+        `;
+
+        div.onclick = () => select(index);
+
+        dropdown.appendChild(div);
+    });
+}
+
+function select(index) {
+    const input = document.getElementById("inputBox");
+    const words = input.value.trim().split(" ");
+    
+    words[words.length - 1] = suggestions[index].word;
+
+    input.value = words.join(" ") + " ";
+    send();
+}
+
+function handleKeys(e) {
+    const items = document.querySelectorAll(".item");
+
+    if (e.key === "ArrowDown") {
+        currentIndex = (currentIndex + 1) % items.length;
+        updateActive(items);
+    }
+
+    else if (e.key === "ArrowUp") {
+        currentIndex = (currentIndex - 1 + items.length) % items.length;
+        updateActive(items);
+    }
+
+    else if (e.key === "Enter") {
+        e.preventDefault();
+        if (currentIndex >= 0) select(currentIndex);
+    }
+}
+
+function updateActive(items) {
+    items.forEach(i => i.classList.remove("active"));
+    if (items[currentIndex]) {
+        items[currentIndex].classList.add("active");
+    }
+}
+</script>
+
+</body>
+</html>
